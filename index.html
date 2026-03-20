@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="referrer" content="no-referrer">
+<title>উন্মাদনা ১৮ - Batch Frenzy</title>
+
+<!-- Favicon using Logo.svg -->
+<link rel="icon" type="image/svg+xml" href="Logo.svg">
+
+<!-- GOOGLE FONTS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Satisfy&display=swap" rel="stylesheet">
+
+<!-- LUCIDE ICONS -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+/* =============================
+   1. COLOR & THEME SETTINGS
+============================== */
+:root {
+  --bg: #030712;
+  --text: #f9fafb;
+  --text-muted: #9ca3af;
+  --card: rgba(255, 255, 255, 0.02);
+  --card-border: rgba(14, 165, 233, 0.2);
+  --accent: #0ea5e9; 
+  --accent-soft: rgba(14, 165, 233, 0.15);
+  --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  --header-bg: rgba(3, 7, 18, 0.6);
+  --glass-blur: 25px;
+  --noise: url("https://grains.vectorizer.io/static/img/noise.png");
+}
+
+body.light {
+  --bg: #f8fafc;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --card: rgba(0, 0, 0, 0.02);
+  --card-border: rgba(14, 165, 233, 0.15);
+  --header-bg: rgba(248, 250, 252, 0.7);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; scroll-behavior:smooth; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: "Hind Siliguri", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background .6s cubic-bezier(0.4, 0, 0.2, 1), color .6s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: var(--noise); opacity: 0.04; pointer-events: none; z-index: 9999;
+}
+
+#memoryCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none; opacity: 0.6; }
+
+.bg-blobs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; filter: blur(90px); opacity: 0.2; pointer-events: none; }
+.blob { position: absolute; background: var(--accent); border-radius: 50%; animation: drift 25s infinite alternate ease-in-out; }
+.blob-orange { background: #f97316; }
+@keyframes drift { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(15vw, 20vh) scale(1.4); } }
+
+/* =============================
+   2. HEADER & NAVIGATION (UPDATED)
+============================== */
+header {
+  position: fixed; width: 100%; top: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 6%; background: var(--header-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  z-index: 2000; border-bottom: 1px solid var(--card-border);
+}
+
+.logo { text-decoration: none; position: relative; z-index: 2100; display: flex; align-items: center; transition: transform 0.3s ease; }
+.logo:hover { transform: scale(1.05); }
+
+/* --- NEW: Animated Logo Styles --- */
+.logo img { 
+  height: 60px; 
+  width: auto; 
+  object-fit: contain; 
+  animation: logoFloat 4s infinite ease-in-out;
+  filter: drop-shadow(0 0 8px var(--accent-soft));
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px var(--accent-soft)); }
+  50% { transform: translateY(-5px) scale(1.02); filter: drop-shadow(0 0 15px var(--accent)); }
+}
+
+nav { display: flex; align-items: center; gap: 25px; }
+nav a {
+  text-decoration: none; color: var(--text); opacity: 0.6; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+  transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); position: relative;
+}
+nav a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: var(--accent); transition: 0.4s ease; }
+nav a:hover, nav a.active { opacity: 1; color: var(--accent); }
+nav a.active::after { width: 100%; }
+
+.menu-trigger { display: none; background: none; border: none; color: var(--text); cursor: pointer; z-index: 2100; padding: 8px; }
+
+.lang-btn {
+  background: none; border: 1px solid var(--card-border); color: var(--text); 
+  border-radius: 100px; padding: 6px 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.3s;
+}
+.visualizer { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; display: flex; align-items: flex-end; pointer-events: none; z-index: 0; }
+.v-bar { flex: 1; margin: 0 1px; background: var(--accent); height: 5%; transition: height 0.1s ease; }
+
+/* --- NEW: Icon Animations --- */
+.music-playing svg {
+  animation: musicPulse 1.5s infinite ease-in-out;
+  color: var(--accent);
+}
+
+@keyframes musicPulse {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(15deg); }
+  75% { transform: scale(1.2) rotate(-15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.theme-rotate svg {
+  animation: rotateIcon 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes rotateIcon {
+  0% { transform: rotate(0deg) scale(0.5); opacity: 0; }
+  100% { transform: rotate(360deg) scale(1); opacity: 1; }
+}
+
+/* =============================
+   3. HERO SECTION
+============================== */
+#hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 6%; position: relative; }
+.hero-tag { font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 15px; opacity: 0; transform: translateY(20px); animation: fadeInUp 1s forwards 0.2s; }
+.hero-title { font-size: clamp(48px, 10vw, 120px); font-weight: 700; line-height: 1.2; letter-spacing: -2px; margin-bottom: 25px; opacity: 0; transform: translateY(30px); animation: fadeInUp 1s forwards 0.4s; position: relative; z-index: 1; text-shadow: 0 0 40px var(--accent-soft); }
+.hero-title span { display: block; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-desc { font-size: clamp(16px, 2vw, 20px); color: var(--text-muted); max-width: 650px; line-height: 1.6; opacity: 0; transform: translateY(20px); animation: fadeInUp 1s forwards 0.6s; margin-bottom: 40px; }
+
+/* =============================
+   4. GRID & CARDS
+============================== */
+section { padding: 100px 6%; position: relative; max-width: 1400px; margin: 0 auto; }
+.section-title { font-size: clamp(32px, 5vw, 54px); font-weight: 700; letter-spacing: -1px; margin-bottom: 15px; }
+.section-desc { font-size: 18px; color: var(--text-muted); margin-bottom: 40px; max-width: 600px; line-height: 1.6; }
+
+.memory-slider-container {
+  width: 100%; height: clamp(250px, 40vw, 500px); position: relative;
+  border-radius: 35px; overflow: hidden; margin-bottom: 40px;
+  border: 1px solid var(--card-border); background: var(--card);
+}
+.memory-slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1.5s ease-in-out, transform 8s linear;
+  transform: scale(1.05);
+}
+.memory-slide.active { opacity: 1; transform: scale(1); }
+
+.filter-container {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 25px;
+  padding: 30px;
+  margin-bottom: 40px;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+.filter-container h3 {
+  font-size: 20px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+}
+.filter-controls { display: flex; flex-wrap: wrap; gap: 20px; }
+.filter-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
+.filter-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.filter-group input, .filter-group select {
+  width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--card-border); color: var(--text); padding: 14px 18px; border-radius: 12px; font-family: inherit; font-size: 15px; outline: none; transition: all 0.3s ease;
+}
+body.light .filter-group input, body.light .filter-group select { background: rgba(255, 255, 255, 0.5); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+
+.image-card {
+  position: relative; border-radius: 35px; overflow: hidden; background: var(--card); border: 1px solid var(--card-border); aspect-ratio: 1/1; text-decoration: none; display: block; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s, opacity 0.3s; backdrop-filter: blur(10px);
+}
+.image-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.image-card:hover { transform: translateY(-8px); border-color: var(--accent); box-shadow: 0 25px 50px var(--accent-soft); }
+
+.badge {
+  position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); padding: 6px 16px; border-radius: 100px; font-size: 11px; font-weight: 700; color: white; z-index: 4; letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-info {
+  position: absolute; bottom: 0; left: 0; width: 100%; z-index: 2; padding: 50px 25px 25px; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0) 100%); color: white;
+}
+
+.designation-text { font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.organization-text { font-size: 14px; color: rgba(255,255,255,0.75); font-weight: 500; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;}
+.extra-details { font-size: 13px; display: flex; gap: 12px; align-items: center; color: rgba(255,255,255,0.9); }
+.blood-badge { background: #ef4444; color: white; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+
+.timeline-card { padding: 40px; border-radius: 35px; background: var(--card); border: 1px solid var(--card-border); backdrop-filter: blur(10px); transition: transform 0.4s, border-color 0.4s; }
+.timeline-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+.event-date { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display: block; }
+
+/* =============================
+   5. CONTACT / CTA
+============================== */
+.contact-container { 
+  max-width: 900px; margin: 0 auto; padding: 80px 40px; 
+  background: var(--card); border-radius: 40px; 
+  border: 1px solid var(--card-border); position: relative; 
+  overflow: hidden; text-align: center; backdrop-filter: blur(15px); 
+  animation: boxGlow 4s infinite alternate ease-in-out;
+}
+
+@keyframes boxGlow {
+  0% { box-shadow: 0 0 15px var(--accent-soft); border-color: rgba(14, 165, 233, 0.2); }
+  100% { box-shadow: 0 0 40px rgba(14, 165, 233, 0.4); border-color: rgba(14, 165, 233, 0.5); }
+}
+
+.socials { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 40px; }
+.socials a { 
+  background: rgba(14, 165, 233, 0.05); padding: 16px 28px; 
+  border-radius: 100px; text-decoration: none; color: var(--text); 
+  font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 10px; 
+  border: 1px solid var(--card-border); 
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  animation: floatSocial 3s infinite ease-in-out; 
+}
+.socials a:nth-child(1) { animation-delay: 0s; }
+.socials a:nth-child(2) { animation-delay: 0.2s; }
+.socials a:nth-child(3) { animation-delay: 0.4s; }
+.socials a:hover {
+  transform: scale(1.1) translateY(-5px);
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 15px 25px var(--accent-soft);
+  animation-play-state: paused;
+}
+
+@keyframes floatSocial {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* =============================
+   6. MOBILE RESPONSIVE
+============================== */
+@media(max-width: 850px) {
+  nav { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100vh; background: var(--header-bg); backdrop-filter: blur(40px); flex-direction: column; justify-content: center; align-items: flex-start; padding: 60px 40px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid var(--card-border); }
+  nav.active { right: 0; }
+  .menu-trigger { display: block; }
+  #hero { text-align: center; }
+  .logo img { height: 45px; } 
+}
+
+@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+footer { padding: 60px 0 40px; text-align: center; opacity: 0.4; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+.no-results { display: none; text-align: center; padding: 40px; color: var(--text-muted); font-size: 18px; width: 100%; grid-column: 1 / -1; }
+
+</style>
+</head>
+<body>
+
+<canvas id="memoryCanvas"></canvas>
+<audio id="bgm" loop preload="auto">
+  <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" type="audio/mpeg">
+</audio>
+
+<div class="bg-blobs">
+  <div class="blob" style="width: 45vw; height: 45vw; top: -10vh; left: -10vw;"></div>
+  <div class="blob blob-orange" style="width: 35vw; height: 35vw; bottom: 10vh; right: -5vw; animation-delay: -5s;"></div>
+</div>
+
+<header id="header">
+  <a href="#" class="logo">
+    <img src="Logo.svg" alt="Logo" id="mainLogo">
+  </a>
+  <div class="visualizer" id="visualizer"></div>
+  <div class="nav-actions" style="display:flex; align-items:center; gap:10px; position:relative; z-index:2200;">
+    <nav id="mainNav">
+      <a href="#about" class="nav-link" data-i18n="nav-story">গল্প</a>
+      <a href="#directory" class="nav-link" data-i18n="nav-batchmates">ব্যাচমেট</a>
+      <a href="#events" class="nav-link" data-i18n="nav-timeline">টাইমলাইন</a>
+    </nav>
+    <button class="lang-btn magnetic" onclick="toggleLanguage()" id="langToggleBtn">EN</button>
+    <button class="icon-btn magnetic" id="musicBtn" onclick="toggleMusic()" style="background:none; border:none; color:var(--text); cursor:pointer; padding:10px;"><i data-lucide="music" id="musicIcon"></i></button>
+    <button class="icon-btn magnetic" id="themeBtn" onclick="toggleMode()" style="background:none; border:none; color:var(--text); cursor:pointer; padding:10px;"><i data-lucide="sun" id="themeIcon"></i></button>
+    <button class="menu-trigger" onclick="toggleMenu()"><i data-lucide="menu" id="menuIcon"></i></button>
+  </div>
+</header>
+
+<section id="hero">
+  <p class="hero-tag" data-i18n="hero-tag">এসএসসি ১৮ ব্যাচ</p>
+  <h1 class="hero-title" data-i18n="hero-title">বন্ধুত্ব.<br><span>একতা. উন্মাদনা.</span></h1>
+  <p class="hero-desc" data-i18n="hero-desc">সোনালী দিনগুলোর স্মৃতিচারণ এবং আমাদের সংযোগের মাধ্যম।</p>
+  <div class="magnetic" style="margin-top: 30px; opacity:0.4;"><i data-lucide="chevron-down" style="width:28px; height:28px; animation: bounce 2s infinite;"></i></div>
+</section>
+
+<section id="about">
+  <h2 class="section-title" data-i18n="memories-title">স্মৃতিচারণ</h2>
+  <div class="memory-slider-container" id="photoSlider"></div>
+  <div class="grid" id="memoryCategoriesGrid"></div>
+</section>
+
+<section id="directory">
+  <h2 class="section-title" data-i18n="network-title">আমাদের নেটওয়ার্ক</h2>
+  <div class="filter-container">
+    <h3 data-i18n="filter-title"><i data-lucide="filter" style="width: 20px; height: 20px;"></i> শিক্ষার্থী খুঁজুন</h3>
+    <div class="filter-controls">
+      <div class="filter-group"><label data-i18n="filter-name">নাম</label><input type="text" id="filterName" data-i18n-placeholder="filter-name-ph" placeholder="নাম..."></div>
+      <div class="filter-group">
+        <label data-i18n="filter-blood">রক্তের গ্রুপ</label>
+        <select id="filterBlood">
+          <option value="All">সব (All)</option>
+          <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option>
+          <option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
+        </select>
+      </div>
+      <div class="filter-group"><label data-i18n="filter-address">ঠিকানা</label><input type="text" id="filterAddress" data-i18n-placeholder="filter-address-ph" placeholder="ঠিকানা..."></div>
+    </div>
+  </div>
+  <div class="grid" id="directoryGrid">
+    <div class="no-results" id="noResults" data-i18n="filter-no-results">কোনো শিক্ষার্থী পাওয়া যায়নি।</div>
+  </div>
+</section>
+
+<section id="events">
+  <h2 class="section-title" data-i18n="timeline-title">টাইমলাইন</h2>
+  <div class="grid" id="eventsGrid" style="grid-template-columns: 1fr;"></div>
+</section>
+
+<section id="contact">
+  <div class="contact-container">
+    <h2 data-i18n="contact-title">সংযুক্ত থাকুন</h2>
+    <div class="socials">
+      <a href="#" class="magnetic"><i data-lucide="facebook"></i> <span data-i18n="btn-facebook">ফেসবুক</span></a>
+      <a href="#" class="magnetic"><i data-lucide="message-circle"></i> <span data-i18n="btn-whatsapp">হোয়াটসঅ্যাপ</span></a>
+      <a href="#" class="magnetic"><i data-lucide="mail"></i> <span data-i18n="btn-email">ইমেইল</span></a>
+    </div>
+  </div>
+</section>
+
+<footer data-i18n="footer-text">© ২০২৬ · ব্যাচমেটদের ভালোবাসায় তৈরি</footer>
+
+<script>
+// ==========================================================================
+// 1. EDITABLE DATABASE
+// ==========================================================================
+const studentsData = [
+  {
+    nameBn: "নাফিস ফয়সাল আশিক", nameEn: "Nafis Foysal Ashik",
+    roleBn: "ইঞ্জিনিয়ার", roleEn: "Engineer",
+    orgBn: "খুলনা ইউনিভার্সিটি অব ইঞ্জিনিয়ারিং অ্যান্ড টেকনোলজি", orgEn: "Khulna University of Engineering & Technology",
+    bloodGroup: "A+",
+    addressBn: "চুয়াডাঙ্গা", addressEn: "Chuaganda",
+    image: "https://unmadona-api.onrender.com/uploads/nafis.jpeg?auto=format&fit=crop&w=600&q=80",
+    icon: "graduation-cap"
+  },
+  {
+    nameBn: "আব্দুল্লাহ আল মাররুফ", nameEn: "Abdullah Al Marruf",
+    roleBn: "ইঞ্জিনিয়ার", roleEn: "Engineer",
+    orgBn: "পাবনা বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয়", orgEn: "Pabna University of Science and Technology",
+    bloodGroup: "B+",
+    addressBn: "পাবনা", addressEn: "Pabna",
+    image: "https://unmadona-api.onrender.com/uploads/niloy.jpeg?auto=format&fit=crop&w=600&q=80",
+    icon: "graduation-cap"
+  },
+  {
+    nameBn: "তানভীর হাসান", nameEn: "Tanvir Hasan",
+    roleBn: "প্রতিষ্ঠাতা ও সিইও", roleEn: "Founder & CEO",
+    orgBn: "নেক্সটজেন সলিউশনস", orgEn: "NextGen Solutions",
+    bloodGroup: "B+",
+    addressBn: "সিলেট", addressEn: "Sylhet",
+    image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=600&q=80",
+    icon: "graduation-cap"
+  },
+  {
+    nameBn: "নুসরাত জাহান", nameEn: "Nusrat Jahan",
+    roleBn: "এমএসসি শিক্ষার্থী", roleEn: "M.Sc Student",
+    orgBn: "বুয়েট", orgEn: "BUET",
+    bloodGroup: "AB+",
+    addressBn: "ঢাকা", addressEn: "Dhaka",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
+    icon: "graduation-cap"
+  }
+];
+
+const eventsData = [
+  {
+    dateBn: "অতীত • ১৫ ডিসে, ২০২৬", dateEn: "Upcoming • Dec 15, 2026",
+    titleBn: "গ্র্যান্ড বার্ষিক ইফতার মহাফিল ২০২৬", titleEn: "Grand Annual Ifatr Party 2026",
+    descBn: "তীব্র নস্টালজিয়া, দারুণ খাবার এবং আড্ডার এক সন্ধ্যা।", descEn: "An evening of nostalgia, food, and friendship.",
+    isPast: true
+  },
+  {
+    dateBn: "অতীত • মার্চ ২০২৫", dateEn: "Past • March 2025",
+    titleBn: "৫-বছরের মাইলফলক মিলনমেলা", titleEn: "5-Year Milestone Get-Together",
+    descBn: "অটুট বন্ধুত্বের অর্ধ দশক উদযাপন।", descEn: "Celebrating half a decade of friendship.",
+    isPast: true
+  }
+];
+
+const sliderImages = [
+  "https://lh3.googleusercontent.com/pw/AP1GczNfR0s8zJwLfVOjGWJclfIFPfo1xXxs3CeHfAr0O26-0WZKxL3qBq7OJ-ebCM15XqZKQq08F2Z6quxK4iXJtW9fQgv2jv7yPoCQL3EJQIiNqMo1JJ-C4a1Hy8oIRSb_iaP1q76NUbMJdQfdQxeBDYv_=w1239-h929-s-no-gm?authuser=0?auto=format&fit=crop&w=1600&q=80",
+  "https://lh3.googleusercontent.com/pw/AP1GczM59PTGWi522vPXPN4fVzszxes7MoDt0JfRw3TERkrJEgR0otLnl0FvJ1XAYidd1XuA18O9DKPLVqXc826hb8DNxBYerJahR3HDBqUVGe4QzlWKNaoWAEJY4c3nHP7wBDgWsNNmi_vgcGIbVyl317sO=w1239-h929-s-no-gm?authuser=0auto=format&fit=crop&w=1600&q=80",
+  "https://lh3.googleusercontent.com/pw/AP1GczNjxtCuN6C3AHEFyP2-zKhHqOihYFkka8upnUDeCwpt2EZDrpSXExdDgZIVMR8oXDbfvx5mOToafMTMcDlZZG06gbC__bXWUscSLWJpZSQd0uyoeWSWlbJWiDwY5Qh1yYaIK2qTbAzYs_bfY6QuO3Lm=w1239-h929-s-no-gm?authuser=0?auto=format&fit=crop&w=1600&q=80"
+];
+
+const memoryCategories = [
+  { badgeBn: "ইফতার মহাফিল ২০২৬", badgeEn: "Ifatr Party 2026", image: "https://lh3.googleusercontent.com/pw/AP1GczOVvBeezfxycKehvY2Qehq12DlbGQVd-y9AoSJay2hWTPENOyM6dMOHdziLIFZfgulocM_lZLIE4qBdYr1e_mm1xJueDafW2l0y6CzzFD8lfpKeU7s0lFVjl2tf2Y1kbRHXqqDe1augRVTP0S7RmEPO=w1652-h929-s-no-gm?authuser=0?w=600", link: "https://photos.app.goo.gl/tummWa7Pzj5bPWFCA" },
+  { badgeBn: "পুনর্মিলনী", badgeEn: "Reunion", image: "https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600", link: "#" },
+  { badgeBn: "ভ্রমণ", badgeEn: "Tours", image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=600", link: "#" }
+];
+
+// ==========================================================================
+// 2. TRANSLATION DICTIONARY
+// ==========================================================================
+const translations = {
+  "nav-story": { bn: "গল্প", en: "Story" },
+  "nav-batchmates": { bn: "ব্যাচমেট", en: "Network" },
+  "nav-timeline": { bn: "টাইমলাইন", en: "Timeline" },
+  "hero-tag": { bn: "এসএসসি ১৮ ব্যাচ", en: "SSC Batch of 2018" },
+  "hero-title": { bn: "বন্ধুত্ব.<br><span>একতা. উন্মাদনা.</span>", en: "Friendship.<br><span>Unity. Frenzy.</span>" },
+  "hero-desc": { bn: "স্মৃতিচারণ এবং সংযোগের মাধ্যম।", en: "Reliving memories and staying connected." },
+  "memories-title": { bn: "স্মৃতিচারণ", en: "Memories" },
+  "network-title": { bn: "আমাদের নেটওয়ার্ক", en: "Our Network" },
+  "filter-title": { bn: "শিক্ষার্থী খুঁজুন", en: "Filter Students" },
+  "filter-name": { bn: "নাম", en: "Name" },
+  "filter-name-ph": { bn: "খুঁজুন...", en: "Search..." },
+  "filter-blood": { bn: "রক্তের গ্রুপ", en: "Blood Group" },
+  "filter-address": { bn: "ঠিকানা", en: "Address" },
+  "filter-address-ph": { bn: "খুঁজুন...", en: "Search..." },
+  "filter-no-results": { bn: "কোনো শিক্ষার্থী পাওয়া যায়নি।", en: "No students found." },
+  "timeline-title": { bn: "টাইমলাইন", en: "Timeline" },
+  "contact-title": { bn: "সংযুক্ত থাকুন", en: "Stay Connected" },
+  "btn-facebook": { bn: "ফেসবুক", en: "Facebook" },
+  "btn-whatsapp": { bn: "হোয়াটসঅ্যাপ", en: "WhatsApp" },
+  "btn-email": { bn: "ইমেইল", en: "Email" },
+  "footer-text": { bn: "© ২০২৬ · ব্যাচমেটদের ভালোবাসায় তৈরি", en: "© 2026 · Crafted with ❤️ by batchmates" }
+};
+
+// ==========================================================================
+// 3. CORE SYSTEM LOGIC
+// ==========================================================================
+let currentLang = 'bn';
+lucide.createIcons();
+
+function renderAll() {
+  renderMemories();
+  renderEvents();
+  renderStudents();
+}
+
+function renderMemories() {
+  const slider = document.getElementById('photoSlider');
+  const catGrid = document.getElementById('memoryCategoriesGrid');
+  slider.innerHTML = sliderImages.map((img, i) => `<div class="memory-slide ${i===0?'active':''}" style="background-image:url('${img}')"></div>`).join('');
+  
+  let cur = 0;
+  setInterval(() => {
+    const s = document.querySelectorAll('.memory-slide');
+    if(s.length<2) return;
+    s[cur].classList.remove('active');
+    cur = (cur+1)%s.length;
+    s[cur].classList.add('active');
+  }, 5000);
+
+  catGrid.innerHTML = memoryCategories.map(c => `
+    <a href="${c.link}" class="image-card" style="aspect-ratio:16/10;">
+      <span class="badge dynamic-lang" data-bn="${c.badgeBn}" data-en="${c.badgeEn}">${currentLang==='bn'?c.badgeBn:c.badgeEn}</span>
+      <img src="${c.image}" loading="lazy">
+    </a>
+  `).join('');
+}
+
+function renderEvents() {
+  const grid = document.getElementById('eventsGrid');
+  grid.innerHTML = eventsData.map(e => `
+    <div class="timeline-card" style="${e.isPast?'opacity:0.6':''}">
+      <span class="event-date dynamic-lang" data-bn="${e.dateBn}" data-en="${e.dateEn}">${currentLang==='bn'?e.dateBn:e.dateEn}</span>
+      <h3 class="dynamic-lang" data-bn="${e.titleBn}" data-en="${e.titleEn}">${currentLang==='bn'?e.titleBn:e.titleEn}</h3>
+      <p class="dynamic-lang" data-bn="${e.descBn}" data-en="${e.descEn}">${currentLang==='bn'?e.descBn:e.descEn}</p>
+    </div>
+  `).join('');
+}
+
+function renderStudents() {
+  const grid = document.getElementById('directoryGrid');
+  const noRes = `<div class="no-results" id="noResults" data-i18n="filter-no-results">${currentLang==='bn'?'কোনো শিক্ষার্থী পাওয়া যায়নি।':'No students found.'}</div>`;
+  grid.innerHTML = noRes + studentsData.map(s => `
+    <div class="image-card" style="aspect-ratio:4/5;" data-name="${s.nameBn}" data-name-en="${s.nameEn}" data-blood="${s.bloodGroup}" data-address="${s.addressBn}" data-address-en="${s.addressEn}">
+      <img src="${s.image}" loading="lazy" onerror="this.src='https://placehold.co/400x500?text=Profile'">
+      <div class="card-info">
+        <p class="designation-text dynamic-lang" data-bn="${s.roleBn}" data-en="${s.roleEn}">${currentLang==='bn'?s.roleBn:s.roleEn}</p>
+        <h3 class="dynamic-lang" data-bn="${s.nameBn}" data-en="${s.nameEn}">${currentLang==='bn'?s.nameBn:s.nameEn}</h3>
+        <p class="organization-text">
+          <i data-lucide="${s.icon}" style="width:16px; height:16px;"></i> 
+          <span class="dynamic-lang" data-bn="${s.orgBn}" data-en="${s.orgEn}">${currentLang==='bn'?s.orgBn:s.orgEn}</span>
+        </p>
+        <div class="extra-details">
+          <span class="blood-badge">${s.bloodGroup}</span>
+          <span><i data-lucide="map-pin" style="width:12px; height:12px;"></i> <span class="dynamic-lang" data-bn="${s.addressBn}" data-en="${s.addressEn}">${currentLang==='bn'?s.addressBn:s.addressEn}</span></span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  lucide.createIcons();
+  attachEffects();
+}
+
+function attachEffects() {
+  document.querySelectorAll('.image-card').forEach(c => {
+    c.addEventListener('mousemove', e => {
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--x', `${((e.clientX - r.left)/r.width)*100}%`);
+      c.style.setProperty('--y', `${((e.clientY - r.top)/r.height)*100}%`);
+    });
+  });
+}
+
+function filterStudents() {
+  const n = document.getElementById('filterName').value.toLowerCase();
+  const b = document.getElementById('filterBlood').value;
+  const a = document.getElementById('filterAddress').value.toLowerCase();
+  const cards = document.querySelectorAll('#directoryGrid .image-card');
+  let found = false;
+  cards.forEach(c => {
+    const mb = (c.dataset.name + c.dataset.nameEn).toLowerCase().includes(n);
+    const bl = b === 'All' || c.dataset.blood === b;
+    const ad = (c.dataset.address + c.dataset.addressEn).toLowerCase().includes(a);
+    if(mb && bl && ad) { c.style.display = 'block'; found = true; } else { c.style.display = 'none'; }
+  });
+  document.getElementById('noResults').style.display = found ? 'none' : 'block';
+}
+
+function toggleLanguage() {
+  currentLang = currentLang === 'bn' ? 'en' : 'bn';
+  document.getElementById('langToggleBtn').innerText = currentLang === 'bn' ? 'EN' : 'বাং';
+  document.body.style.fontFamily = currentLang === 'bn' ? '"Hind Siliguri", sans-serif' : '"SF Pro Display", sans-serif';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (translations[k]) el.innerHTML = translations[k][currentLang];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const k = el.dataset.i18nPlaceholder;
+    if (translations[k]) el.placeholder = translations[k][currentLang];
+  });
+  document.querySelectorAll('.dynamic-lang').forEach(el => {
+    el.innerHTML = el.getAttribute(currentLang === 'bn' ? 'data-bn' : 'data-en');
+  });
+  lucide.createIcons();
+}
+
+// Background Particles
+const canvas = document.getElementById('memoryCanvas');
+const ctx = canvas.getContext('2d');
+let parts = [];
+function initC() {
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  parts = Array.from({length: 150}, () => ({
+    r: Math.random()*2, a: Math.random()*Math.PI*2, d: Math.random()*canvas.width,
+    s: 0.001+Math.random()*0.002, c: Math.random()>0.3?'#0ea5e9':'#f97316'
+  }));
+}
+function draw() {
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg');
+  ctx.globalAlpha = 0.2; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.globalAlpha = 1;
+  parts.forEach(p => {
+    p.a += p.s;
+    const x = canvas.width/2 + Math.cos(p.a)*p.d;
+    const y = canvas.height/2 + Math.sin(p.a)*p.d;
+    p.d -= 0.2; if(p.d<10) p.d = canvas.width*0.6;
+    ctx.beginPath(); ctx.arc(x,y,p.r,0,Math.PI*2); ctx.fillStyle=p.c; ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+
+// Music & Animations
+const bgm = document.getElementById('bgm');
+let playing = false;
+let visAnimations = [];
+
+function toggleMusic() {
+  const btn = document.getElementById('musicBtn');
+  if(!playing) { 
+    bgm.play(); 
+    startVis(); 
+    btn.classList.add('music-playing'); // Add spinning/pulsing class
+  } else { 
+    bgm.pause(); 
+    stopVis();
+    btn.classList.remove('music-playing'); // Remove spinning/pulsing class
+  }
+  playing = !playing;
+}
+
+function startVis() {
+  const v = document.getElementById('visualizer');
+  // Initialize bars if they don't exist
+  if(!v.children.length) {
+    for(let i=0;i<30;i++) v.appendChild(document.createElement('div')).className='v-bar';
+    document.querySelectorAll('.v-bar').forEach(b => {
+      let anim = b.animate([{height:'5%'},{height:(20+Math.random()*60)+'%'}], {
+        duration: 400+Math.random()*400,
+        iterations: Infinity,
+        direction: 'alternate'
+      });
+      visAnimations.push(anim);
+    });
+  } else {
+    // Resume animations if they were paused
+    visAnimations.forEach(anim => anim.play());
+  }
+}
+
+function stopVis() {
+  // Pause the visualizer animations
+  visAnimations.forEach(anim => anim.pause());
+}
+
+// Enhanced Theme Toggle with Animation
+function toggleMode() { 
+  const body = document.body;
+  const btn = document.getElementById('themeBtn');
+  const icon = document.getElementById('themeIcon');
+  
+  btn.classList.add('theme-rotate'); // Triggers the 360 flip
+  body.classList.toggle('light');
+  
+  if(body.classList.contains('light')) {
+    icon.setAttribute('data-lucide', 'moon'); // Swap icon
+  } else {
+    icon.setAttribute('data-lucide', 'sun'); // Swap icon
+  }
+  lucide.createIcons();
+  
+  // Remove animation class after completion so it can be re-triggered later
+  setTimeout(() => btn.classList.remove('theme-rotate'), 600);
+}
+
+function toggleMenu() { 
+  document.getElementById('mainNav').classList.toggle('active'); 
+  lucide.createIcons(); 
+}
+
+// --- NEW: Scroll Spy for Navigation Indicator ---
+window.addEventListener('scroll', () => {
+  let current = "";
+  const sections = document.querySelectorAll("section");
+  
+  sections.forEach((section) => {
+    const sectionTop = section.offsetTop;
+    // Check if scroll is at least 150px into the section
+    if (pageYOffset >= sectionTop - 150) {
+      current = section.getAttribute("id");
+    }
+  });
+
+  document.querySelectorAll(".nav-link").forEach((a) => {
+    a.classList.remove("active");
+    if (a.getAttribute("href").includes(current)) {
+      a.classList.add("active");
+    }
+  });
+});
+
+window.onload = () => {
+  renderAll(); initC(); draw();
+  document.getElementById('filterName').addEventListener('input', filterStudents);
+  document.getElementById('filterBlood').addEventListener('change', filterStudents);
+  document.getElementById('filterAddress').addEventListener('input', filterStudents);
+};
+</script>
+</body>
+</html>
